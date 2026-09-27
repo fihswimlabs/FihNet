@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "fihnet",
+  "version": "${version}",
+  "name": "FihNet",
+  "description": "A modern client companion for social presence, appearance, shaders and performance.",
+  "authors": ["FihNet contributors"],
+  "contact": {},
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "net.fihnet.client.FihNetClient"
+    ]
+  },
+  "mixins": [
+    "fihnet.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.17.2",
+    "minecraft": "~26.1.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

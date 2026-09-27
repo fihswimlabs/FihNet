@@ -1,0 +1,18 @@
+[Unit]
+Description=FihNet backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=fihnet
+WorkingDirectory=/opt/fihnet
+Environment=PORT=8765
+Environment=FIHNET_DATA=/var/lib/fihnet/fihnet-data.json
+ExecStart=/usr/bin/java -cp /opt/fihnet/out FihNetServer
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

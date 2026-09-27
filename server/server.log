@@ -1,0 +1,11 @@
+Loaded 2 users from server\test-data.json
+FihNet server listening on port 8765
+Users loaded: 2, data file: C:\Users\jonat\FihNet\server\test-data.json
+Registered Alex25446125
+Registered Bob25446125
+Alex25446125 and Bob25446125 are now friends
+Chat Bob25446125 to Alex25446125: hello from Bob
+Registered Alex25455279
+Registered Bob25455279
+Alex25455279 and Bob25455279 are now friends
+Chat Bob25455279 to Alex25455279: hello from Bob

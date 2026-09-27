@@ -1,0 +1,24 @@
+# Render Blueprint for the FihNet backend (free instance type, no billing info).
+#
+# Deploy: Render dashboard -> New -> Blueprint -> select this repository.
+# Or create the service by hand with the same settings:
+#   Runtime: Docker | Dockerfile: server/Dockerfile | Context: server
+#   Instance type: Free | Health check path: /api/health
+#
+# The free instance spins down after about 15 minutes with no traffic and has an
+# ephemeral filesystem, so accounts, friends and chat history are lost on every
+# restart or wake. That is accepted for the testing phase. The follow-up is a
+# free-tier Postgres (Neon or Supabase) - NOT a paid Render disk, which stays out.
+# Pick a free-tier region in the dashboard if the default is unavailable.
+services:
+  - type: web
+    name: fihnet-server
+    runtime: docker
+    plan: free
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: ./server
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: FIHNET_DATA
+        value: /data/fihnet-data.json

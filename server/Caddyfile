@@ -1,0 +1,5 @@
+# Put your domain here and point its DNS at this server first.
+# Caddy then gets a free HTTPS certificate automatically.
+fihnet.example.com {
+    reverse_proxy fihnet:8765
+}

@@ -1,0 +1,107 @@
+package net.fihnet.client;
+
+import net.fihnet.client.ui.FihNetBaseScreen;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import org.jspecify.annotations.NonNull;
+
+import java.util.List;
+
+public final class FihNetScreen extends FihNetBaseScreen {
+    private final Screen parent;
+
+    public FihNetScreen(Screen parent) {
+        super(Component.literal("FihNet"));
+        this.parent = parent;
+    }
+
+    @Override
+    protected void initContent() {
+        // Left column: module buttons.
+        int navX = contentLeft;
+        int navW = 200;
+        int navH = 36;
+        int navY = contentTop + 8;
+
+        @NonNull Component[] navLabels = {
+                Component.literal("Friends List"),
+                Component.literal("Custom Skins"),
+                Component.literal("Cosmetics & Capes"),
+                Component.literal("Shader Loader"),
+                Component.literal("Performance"),
+                Component.literal("Settings"),
+                Component.literal("FihNet Account")
+        };
+        List<Class<? extends FihNetBaseScreen>> navClasses = List.of(
+                FriendsScreen.class,
+                SkinsScreen.class,
+                CosmeticsScreen.class,
+                ShadersScreen.class,
+                PerformanceScreen.class,
+                SettingsScreen.class,
+                LoginScreen.class
+        );
+
+        for (int i = 0; i < navLabels.length; i++) {
+            int navIndex = i;
+            int y = navY + i * (navH + 8);
+            addRenderableWidget(Button.builder(navLabels[i], btn -> {
+                try {
+                    FihNetBaseScreen next = navClasses.get(navIndex).getConstructor(Screen.class).newInstance(this);
+                    minecraft.setScreen(next);
+                } catch (Exception e) {
+                    FihNetClient.LOG.error("Failed to open navigation screen: {}", navLabels[navIndex], e);
+                }
+            }).bounds(navX, y, navW, navH).build());
+        }
+
+        // Right column: feature toggles.
+        int rightX = contentLeft + 230;
+        int rightW = contentRight - rightX;
+        int gridX1 = rightX;
+        int gridX2 = rightX + rightW / 2;
+        int gridW = rightW / 2 - 4;
+        int gridY0 = contentTop + 4;
+        int gridH = 32;
+        int gridSpacing = 8;
+        Feature[] features = Feature.values();
+        for (int i = 0; i < features.length; i++) {
+            Feature f = features[i];
+            int col = i % 2;
+            int row = i / 2;
+            int gx = col == 0 ? gridX1 : gridX2;
+            int gy = gridY0 + row * (gridH + gridSpacing);
+            boolean isSocialSub = f.isSocialSubFeature();
+            boolean enabled = FihNetClient.config.isEnabled(f);
+            String label = (isSocialSub ? "  " : "") + (enabled ? "ON  " : "OFF ") + f.label();
+
+            addRenderableWidget(Button.builder(Component.literal(label), btn -> {
+                FihNetClient.config.toggle(f);
+                btn.setMessage(Component.literal((isSocialSub ? "  " : "") +
+                        (FihNetClient.config.isEnabled(f) ? "ON  " : "OFF ") + f.label()));
+            }).bounds(gx, gy, gridW, gridH).build());
+        }
+    }
+
+    @Override
+    protected void renderContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        sectionHeader(graphics, contentLeft, contentTop - 8, Component.literal("MODULES"));
+        sectionHeader(graphics, contentLeft + 230, contentTop - 8, Component.literal("FEATURE TOGGLES"));
+
+        String account = FihNetClient.authService != null && FihNetClient.authService.isLoggedIn()
+                ? "Signed in to FihNet as " + FihNetClient.authService.getUsername()
+                : "Not signed in - open FihNet Account to sign in";
+        graphics.text(font, Component.literal(account), contentLeft, contentBottom + 2, 0xFF77A0A6);
+        graphics.text(font, Component.literal("Menu key works anywhere and is rebindable in Controls."),
+                contentLeft, contentBottom + 14, 0xFF77A0A6);
+    }
+
+    @Override
+    public void onClose() {
+        if (minecraft != null) {
+            minecraft.setScreen(parent);
+        }
+    }
+}

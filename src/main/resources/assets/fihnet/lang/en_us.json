@@ -1,0 +1,21 @@
+{
+  "key.fihnet.open_menu": "Open FihNet Menu",
+  "fihnet.login.title": "FihNet Login",
+  "fihnet.login.sign_in": "Sign In",
+  "fihnet.login.create_account": "Create Account",
+  "fihnet.login.username": "Username",
+  "fihnet.login.password": "Password",
+  "fihnet.login.email": "Email (optional)",
+  "fihnet.login.show_password": "Show",
+  "fihnet.login.hide_password": "Hide",
+  "fihnet.login.cancel": "Cancel",
+  "fihnet.login.not_affiliated": "Not affiliated with Mojang or Microsoft",
+  "fihnet.friends.title": "Friends",
+  "fihnet.friends.add": "Add Friend",
+  "fihnet.friends.refresh": "Refresh",
+  "fihnet.friends.chat": "Friend Chat",
+  "fihnet.friends.join": "Join",
+  "fihnet.friends.blocked": "Blocked",
+  "fihnet.friends.offline": "Offline",
+  "fihnet.friends.online": "Online"
+}

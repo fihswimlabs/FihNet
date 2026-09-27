@@ -1,0 +1,194 @@
+package net.fihnet.client.ui;
+
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import org.jspecify.annotations.NonNull;
+
+/**
+ * Base screen providing a sleek, modern FihNet-themed UI.
+ * All FihNet screens extend this to share the same visual language.
+ */
+public abstract class FihNetBaseScreen extends Screen {
+    protected static final int PANEL_WIDTH = 720;
+    protected static final int PANEL_HEIGHT = 460;
+    protected static final int SIDEBAR_WIDTH = 195;
+    protected static final int ACCENT_COLOR = 0xFF61D4C3;
+    protected static final int PANEL_BG = 0xF0141820;
+    protected static final int PANEL_BG_LIGHT = 0xF81A1F28;
+    protected static final int TEXT_PRIMARY = 0xFFFFFFFF;
+    protected static final int TEXT_SECONDARY = 0xFFB5C5C8;
+    protected static final int TEXT_ACCENT = 0xFF61D4C3;
+    protected static final int DIVIDER = 0xFF2B3B43;
+    protected static final int BUTTON_BG = 0xFF1A1F28;
+    protected static final int BUTTON_HOVER = 0xFF222936;
+    protected static final int BUTTON_BORDER = 0xFF2B3B43;
+    protected static final int ROW_HOVERED = 0xFF222936;
+    protected static final int ROW_SELECTED = 0xFF1E2530;
+    protected static final int ROW_BORDER_HOVER = 0xFF3A4A55;
+
+    protected int panelLeft;
+    protected int panelTop;
+    protected int contentLeft;
+    protected int contentRight;
+    protected int contentTop;
+    protected int contentBottom;
+
+    protected FihNetBaseScreen(@NonNull Component title) {
+        super(title);
+    }
+
+    @Override
+    protected void init() {
+        panelLeft = Math.max(24, (width - PANEL_WIDTH) / 2);
+        panelTop = Math.max(30, (height - PANEL_HEIGHT) / 2);
+        contentLeft = panelLeft + SIDEBAR_WIDTH + 20;
+        contentRight = panelLeft + PANEL_WIDTH - 20;
+        contentTop = panelTop + 60;
+        contentBottom = panelTop + PANEL_HEIGHT - 30;
+        initContent();
+    }
+
+    protected abstract void initContent();
+
+    private boolean firstTick = true;
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (firstTick) {
+            firstTick = false;
+            loadDeferredData();
+        }
+    }
+
+    @Override
+    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        // Paint the panel first so widgets render on top of it.
+        renderBackground(graphics);
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
+        renderContent(graphics, mouseX, mouseY, delta);
+    }
+
+    /**
+     * Idempotent repaint helper. Re-opens the same screen instance only when
+     * it is currently the active screen (guards against stale callbacks).
+     */
+    protected void requestRepaint() {
+        if (minecraft != null && minecraft.screen == this) {
+            minecraft.setScreen(this);
+        }
+    }
+
+    protected void loadDeferredData() {
+        // Overridden by screens that need to load data after initialization.
+    }
+
+    /** Returns true if the given rectangle is under the mouse. */
+    protected boolean isHovered(int x, int y, int w, int h, int mouseX, int mouseY) {
+        return mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
+    }
+
+    /** Draws a hover tint for a button-style rectangle. Call AFTER filling the background. */
+    protected void tintIfHovered(GuiGraphicsExtractor graphics, int x, int y, int w, int h,
+                                  int mouseX, int mouseY) {
+        if (isHovered(x, y, w, h, mouseX, mouseY)) {
+            graphics.fill(x, y, x + w, y + h, BUTTON_HOVER);
+        }
+    }
+
+    /**
+     * Draws a complete button background with hover + selected support.
+     * @param graphics render target
+     * @param x button left
+     * @param y button top
+     * @param w button width
+     * @param h button height
+     * @param mouseX current mouse X
+     * @param mouseY current mouse Y
+     * @param selected true when this button represents the selected/highlighted row
+     */
+    protected void drawButton(GuiGraphicsExtractor graphics, int x, int y, int w, int h,
+                              int mouseX, int mouseY, boolean selected) {
+        int bg = selected ? ROW_SELECTED : BUTTON_BG;
+        graphics.fill(x, y, x + w, y + h, bg);
+        if (selected || isHovered(x, y, w, h, mouseX, mouseY)) {
+            graphics.fill(x, y, x + w, y + 1, ACCENT_COLOR);
+            graphics.fill(x, y + h - 1, x + w, y + h, DIVIDER);
+        }
+        graphics.fill(x, y, x + 1, y + h, BUTTON_BORDER);
+        graphics.fill(x + w - 1, y, x + w, y + h, BUTTON_BORDER);
+    }
+
+    /**
+     * Draws a list-row background with hover/selected highlighting.
+     * Call this at the start of each row paint.
+     */
+    protected void drawRow(GuiGraphicsExtractor graphics, int x, int y, int w, int h,
+                           int mouseX, int mouseY, boolean selected) {
+        if (selected) {
+            graphics.fill(x, y, x + w, y + h, ROW_SELECTED);
+            graphics.fill(x, y, x + w, y + 1, ACCENT_COLOR);
+        } else if (isHovered(x, y, w, h, mouseX, mouseY)) {
+            graphics.fill(x, y, x + w, y + h, ROW_HOVERED);
+            graphics.fill(x, y, x + w, y + 1, ROW_BORDER_HOVER);
+        } else {
+            graphics.fill(x, y, x + w, y + h, BUTTON_BG);
+        }
+        graphics.fill(x, y, x + 1, y + h, BUTTON_BORDER);
+        graphics.fill(x + w - 1, y, x + w, y + h, BUTTON_BORDER);
+    }
+
+    /**
+     * Renders a section header label with an accent underline.
+     */
+    protected void sectionHeader(GuiGraphicsExtractor graphics, int x, int y, @NonNull Component text) {
+        graphics.text(font, text, x, y, ACCENT_COLOR);
+        int textWidth = font.width(text);
+        graphics.fill(x, y + 10, x + textWidth, y + 11, ACCENT_COLOR);
+    }
+
+    /**
+     * Renders a centered "Loading…" caption for empty list states.
+     * Uses the panel center so it looks intentional rather than floating in dead space.
+     */
+    protected void loadingCaption(GuiGraphicsExtractor graphics, int panelCenterX, int panelCenterY,
+                                  @NonNull Component message) {
+        int textWidth = font.width(message);
+        int textX = panelCenterX - textWidth / 2;
+        int textY = panelCenterY - 8;
+        graphics.text(font, message, textX, textY, TEXT_SECONDARY);
+        graphics.fill(textX, textY + 12, textX + textWidth, textY + 13, ACCENT_COLOR);
+    }
+
+    protected void renderBackground(GuiGraphicsExtractor graphics) {
+        int panelRight = panelLeft + PANEL_WIDTH;
+        int panelBottom = panelTop + PANEL_HEIGHT;
+
+        // Main panel background
+        graphics.fill(panelLeft, panelTop, panelRight, panelBottom, PANEL_BG);
+        // Accent stripe on the left
+        graphics.fill(panelLeft, panelTop, panelLeft + 5, panelBottom, ACCENT_COLOR);
+        // Header background
+        graphics.fill(panelLeft, panelTop, panelRight, panelTop + 56, PANEL_BG_LIGHT);
+        // Header separator
+        graphics.fill(panelLeft, panelTop + 56, panelRight, panelTop + 57, DIVIDER);
+        // Sidebar background
+        graphics.fill(panelLeft + 5, panelTop + 56, panelLeft + SIDEBAR_WIDTH, panelBottom, PANEL_BG_LIGHT);
+        // Sidebar separator
+        graphics.fill(panelLeft + SIDEBAR_WIDTH, panelTop + 56, panelLeft + SIDEBAR_WIDTH + 1, panelBottom, DIVIDER);
+        // Content area background
+        graphics.fill(contentLeft - 10, contentTop - 10, contentRight + 10, contentBottom + 10, PANEL_BG_LIGHT);
+        // Content border
+        graphics.fill(contentLeft - 10, contentTop - 10, contentRight + 10, contentTop - 9, DIVIDER);
+        graphics.fill(contentLeft - 10, contentBottom + 9, contentRight + 10, contentBottom + 10, DIVIDER);
+        graphics.fill(contentLeft - 11, contentTop - 10, contentLeft - 10, contentBottom + 10, DIVIDER);
+        graphics.fill(contentRight + 9, contentTop - 10, contentRight + 10, contentBottom + 10, DIVIDER);
+
+        // Title
+        graphics.text(font, Component.literal("FihNet"), panelLeft + 28, panelTop + 22, TEXT_PRIMARY);
+        graphics.text(font, Component.literal("CLIENT CONTROL CENTER"), panelLeft + 28, panelTop + 38, 0xFF77A0A6);
+    }
+
+    protected abstract void renderContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta);
+}
